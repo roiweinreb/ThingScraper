@@ -143,3 +143,5 @@ Database/config.py
 # ignore outputs
 JSON/*
 Logs/*
+
+.vscode
