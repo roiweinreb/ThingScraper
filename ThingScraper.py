@@ -23,7 +23,7 @@ def to_field_format(name):
     """
     Converts given name into lowercase str and replaces whitespaces with an underscore.
     """
-    return name.lower().replace(' ', '_')
+    return name.lower().replace(' ', '_').split('\n')[0]
 
 
 def get_parent(element):
@@ -734,8 +734,7 @@ class Thing(ScrapedData):
 
     def _fetch_license(self):
         try:
-            self._elements[Thing.ELEMENTS.LICENSE] = \
-                self.browser.driver.find_element_by_xpath(gconf.ThingSettings.LICENSE_PATH)
+            self._elements[Thing.ELEMENTS.LICENSE] = self.browser.wait_and_find(By.CLASS_NAME, gconf.ThingSettings.LICENSE)
         except NoSuchElementException:
             self._elements[Thing.ELEMENTS.LICENSE] = None
 
@@ -743,29 +742,22 @@ class Thing(ScrapedData):
         # obtain print settings element
         # this is an optional information the creator can provide, so some models may not have this information.
         try:
-            settings_header = self.browser.find_text(tag='div', class_name=gconf.ThingSettings.BLOCK_TITLE,
-                                                     text='Print Settings')
-            print_settings = self.browser.find_parent(settings_header)
-            self._elements[Thing.ELEMENTS.PRINT_SETTINGS] = print_settings.find_elements_by_class_name(
-                gconf.ThingSettings.PRINT_SETTING)
+            self._elements[Thing.ELEMENTS.PRINT_SETTINGS] = self.browser.wait_and_find(By.XPATH, gconf.ThingSettings.PRINT_SETTINGS)
         except NoSuchElementException:
             self._elements[Thing.ELEMENTS.PRINT_SETTINGS] = None
 
     def _fetch_tags(self):
         # obtain all tag elements into a list
         try:
-            all_tags = self.browser.wait_and_find(By.CLASS_NAME, gconf.ThingSettings.TAG_LIST)
-            self._elements[Thing.ELEMENTS.TAGS] = [tag for tag in
-                                                   all_tags.find_elements_by_class_name(gconf.ThingSettings.TAG_SINGLE)]
+            self._elements[Thing.ELEMENTS.TAGS] = self.browser.wait_and_find(By.XPATH, gconf.ThingSettings.TAG_SINGLE, find_all=True)
         except (NoSuchElementException, TimeoutException):
             self._elements[Thing.ELEMENTS.TAGS] = None
 
     def _fetch_tab_buttons(self):
         # obtain tab buttons holding metric information: files, comments, makes and remixes
-        all_metrics = self.browser.wait_and_find(By.CLASS_NAME, gconf.ThingSettings.TAB_BUTTON, find_all=True)
+        all_metrics = self.browser.wait_and_find(By.CSS_SELECTOR, gconf.ThingSettings.TAB_BUTTON, find_all=True)
         self._elements[Thing.ELEMENTS.TABS] = {
-            metric.find_element_by_class_name(gconf.ThingSettings.TAB_TITLE): metric.find_element_by_class_name(
-                gconf.ThingSettings.METRIC)
+            metric: metric
             for metric in all_metrics}
 
     def _fetch_created_by(self):
@@ -805,16 +797,16 @@ class Thing(ScrapedData):
             # add empty print settings to properties (as some models may not have any print settings information
             print_settings = {to_field_format(key): None for key in gconf.ThingSettings.POSSIBLE_PRINT_SETTINGS}
 
-            for setting in self._elements[Thing.ELEMENTS.PRINT_SETTINGS]:
-                # using regex to obtain setting name and value into two groups
-                regex_result = re.search(gconf.ThingSettings.FIND_SETTING_REGEX, setting.text)
+            setting = self._elements[Thing.ELEMENTS.PRINT_SETTINGS]
+            # using regex to obtain setting name and value into two groups
+            regex_result = re.search(gconf.ThingSettings.FIND_SETTING_REGEX, setting.text)
 
-                if regex_result is not None:
-                    provided_property = to_field_format(regex_result.group(1))
-                    property_value = regex_result.group(2).lower()
+            if regex_result is not None:
+                provided_property = to_field_format(regex_result.group(1))
+                property_value = regex_result.group(2).lower()
 
-                    if provided_property in print_settings.keys():
-                        print_settings[provided_property] = property_value
+                if provided_property in print_settings.keys():
+                    print_settings[provided_property] = property_value
 
             self[Thing.PROPERTIES.PRINT_SETTINGS] = print_settings
         else:
@@ -829,23 +821,23 @@ class Thing(ScrapedData):
 
     def _parse_metrics(self):
         # set tab buttons to be ignore (hold not useful information)
-        ignore_buttons = ('Thing Details', 'Apps')
+        ignore_buttons = ('Thing details', 'Apps')
         # for each tab button element, add it's name (converted using to_field_format function) and value to properties
         for key, value in self._elements[Thing.ELEMENTS.TABS].items():
             if key.text not in ignore_buttons:
                 # using tab button names as field names. lowering case and replacing spaces with underscore
                 # cast metric as int
-                self.properties[to_field_format(key.text)] = int(value.text)
+                self.properties[to_field_format(key.text)] = int(value.text.split('\n')[1])
 
     def _parse_upload_date(self):
         # use created by html to obtain uploaded date text (uploaded date appears after a end tag)
-        date_text = self._elements[Thing.ELEMENTS.CREATOR].get_attribute('innerHTML').split(sep='</a> ')[1]
+        date_text = self._elements[Thing.ELEMENTS.CREATOR].get_attribute('innerHTML').split(sep='</div>')[1].replace('<div>', '')
         # convert string date into actual date using datetime package. Date saved in epoch format.
         self.properties[Thing.PROPERTIES.UPLOADED] = datetime.datetime.strptime(date_text, "%B %d, %Y").isoformat()
 
     def _parse_creator_username(self):
         self.properties[Thing.PROPERTIES.USERNAME] = \
-            self._elements[Thing.ELEMENTS.CREATOR].find_element_by_tag_name('a').get_attribute('text')
+            self._elements[Thing.ELEMENTS.CREATOR].find_element_by_tag_name('div').text
 
     def _parse_model_name(self):
         self.properties[Thing.PROPERTIES.MODEL_NAME] = self._elements[Thing.ELEMENTS.MODEL_NAME].text
@@ -877,9 +869,9 @@ class Thing(ScrapedData):
 
         self._fetch_license()
 
-        self._fetch_remix()
+        # self._fetch_remix()
 
-        self._fetch_category()
+        # self._fetch_category()
 
     def parse_all(self, clear_cache=True):
         """Obtain information from elements previously fetched for the thing.
@@ -912,11 +904,11 @@ class Thing(ScrapedData):
         # License
         self._parse_license()
 
-        # Remix
-        self._parse_remix()
+        # # Remix
+        # self._parse_remix()
 
-        # Category
-        self._parse_category()
+        # # Category
+        # self._parse_category()
 
         # Clearing cache
         if clear_cache:

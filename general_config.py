@@ -6,9 +6,9 @@ THINGS_PER_PAGE = 20  # Number of things found in each explore page
 DATE_SUFFIX = "_%d%m%Y-%H%M"
 
 class ExploreList:
-    THING_CARD = "ThingCard__thingCard--1IcHY"
-    CARD_BODY = "ThingCardBody__cardBodyWrapper--ba5pu"
-    THING_LIKES = "CardActionItem__textWrapper--2wTM-"
+    THING_CARD = "ThingCard__thingCard--fG91n"
+    CARD_BODY = "ThingCardBody__cardBodyWrapper--BLLzJ"
+    THING_LIKES = "CardActionItem__text--Regp7"
 
 
 class UserSettings:
@@ -34,7 +34,6 @@ class UserSettings:
         LIKES = 'likes'
         TITLES = 'titles'
         SKILL_LEVEL = 'skill_level'
-
 
     # Urls
     BASE_URL = "https://www.thingiverse.com/{}/designs"
@@ -145,8 +144,6 @@ class ThingSettings:
     REMIX_METRIC_INDEX = 4
     ID_REGEX = r"thing:(\d*)"
 
-
-
     POSSIBLE_PRINT_SETTINGS = ["Printer Brand",  # ORDER OF PRINT SETTINGS MATTER
                                "Printer Model",
                                "Rafts",
@@ -164,23 +161,21 @@ class ThingSettings:
 
     # Classes
     CARD_TITLE = "ThingCardHeader__cardNameWrapper--3xgAZ"
-    MODEL_NAME = "ThingPage__modelName--3CMsV"
-    CREATED_BY = "ThingPage__createdBy--1fVAy"
-    TAB_BUTTON = "MetricButton__tabButton--2rvo1"
+    MODEL_NAME = "DetailPageTitle__thingTitleName--sGpkS"
+    CREATED_BY = "DetailPageTitle__thingTitleMeta--P5VUn"
+    TAB_BUTTON = ".um-button.Tabs__tab--aC64Y"
     TAB_TITLE = "MetricButton__tabTitle--2Xau7"
     METRIC = "MetricButton__metric--FqxBi"
-    TAG_LIST = "Tags__widgetBody--19Uop"
-    TAG_SINGLE = "Tags__tag--2Rr15"
+    TAG_LIST = "Tags__tagsList--xZV1A"
+    TAG_SINGLE = "//div[@class='Tags__tagsList--xZV1A']/a"
     REMIX_SECTION = "RemixedFromSection__title--1Wb7x"
     REMIX_CARD = "ThingCardBody__cardBodyWrapper--ba5pu"
     CATEGORY_SECTION = "ThingsMoreSection__showMoreHeading--u2OAR"
     CATEGORY_NAME = "ThingsMoreSection__categoryName--3RWut"
-    PRINT_SETTINGS = "ThingPage__preHistory--312bi"
+    PRINT_SETTINGS = "//div[@id='Print Settings']/ul"
     PRINT_SETTING = "ThingPage__description--14TtH"
     BLOCK_TITLE = "ThingPage__blockTitle--3ZdLu"
-
-    # HTML paths
-    LICENSE_PATH = r"//a[@class='License__link--NFT8l' and not(@class='License__creator--4riPo')]"
+    LICENSE = "License__licenseCode--Aezqo"
 
 
 class Logs:
